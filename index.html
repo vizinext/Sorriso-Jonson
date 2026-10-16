@@ -164,6 +164,12 @@ section{padding:clamp(70px,10vw,130px) 0;position:relative}
 .tile[hidden]{display:none}
 .note{margin-top:28px;font-size:.84rem;color:var(--muted);text-align:center;max-width:70ch;margin-inline:auto}
 
+.cases{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:0 0 30px}
+.case{width:86px;height:86px;border-radius:50%;overflow:hidden;border:2px solid transparent;padding:0;cursor:pointer;opacity:.6;transition:.3s;background:var(--vinho-2);outline:1px solid rgba(217,154,130,.5);outline-offset:2px}
+.case img{width:100%;height:100%;object-fit:cover}
+.case:hover{opacity:.9}
+.case.on{opacity:1;border-color:var(--cobre);transform:scale(1.1)}
+@media(max-width:520px){.case{width:68px;height:68px}}
 /* equipe */
 .team{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
 .doc{text-align:center;padding:34px 18px 30px;border-radius:var(--r);background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(245,203,207,.18);transition:.4s var(--ease)}
@@ -324,8 +330,8 @@ footer small{display:block;margin-top:24px;font-size:.78rem;opacity:.7}
 
 <section class="ba" id="resultados">
   <div class="wrap">
-    <div class="head c reveal"><div class="eyebrow c">Antes &amp; depois</div><h2>Transformações <em>reais</em>.</h2><p class="lead">Arraste a linha para comparar. Toque em qualquer caso da parede para abrir.</p></div>
-    <div class="chips reveal" id="chips"></div>
+    <div class="head c reveal"><div class="eyebrow c">Antes &amp; depois</div><h2>Transformações <em>reais</em>.</h2><p class="lead">Escolha um caso e arraste para ver o antes e o depois.</p></div>
+    <div class="cases" id="cases"></div>
     <div class="stage reveal">
       <div class="cmpbox"><div class="cmp" id="cmp" tabindex="0" role="slider" aria-label="Comparar antes e depois" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
         <img id="imgA" alt="Antes do tratamento" decoding="async">
@@ -339,7 +345,6 @@ footer small{display:block;margin-top:24px;font-size:.78rem;opacity:.7}
         <a class="btn btn-vinho" href="https://wa.me/5511973117704?text=Ol%C3%A1!%20Vi%20os%20resultados%20no%20site%20e%20quero%20agendar%20uma%20avalia%C3%A7%C3%A3o." target="_blank" rel="noopener">Quero o meu sorriso</a>
       </div>
     </div>
-    <div class="wall" id="wall"></div>
     <p class="note">Os resultados variam de pessoa para pessoa. A indicação de cada tratamento é feita após avaliação clínica.</p>
   </div>
 </section>
@@ -452,7 +457,7 @@ function load(i,doSweep=true){
   imgA.onload=()=>{cmp.style.aspectRatio=imgA.naturalWidth+'/'+imgA.naturalHeight;fit()};
   imgA.src='c'+c.id+'a.webp';imgD.src='c'+c.id+'d.webp';
   $('#bt').textContent=c.t;$('#bdt').textContent=c.dt;$('#bd').textContent=c.d;
-  $$('.tile').forEach(t=>t.classList.toggle('on',+t.dataset.i===i));
+  $$('.case').forEach(t=>t.classList.toggle('on',+t.dataset.i===i));
   setPos(50);if(doSweep)sweep();
 }
 /* limita a largura de fotos verticais para caberem na tela */
@@ -466,12 +471,8 @@ cmp.addEventListener('pointermove',e=>{if(drag)mv(e)});
 ['pointerup','pointercancel'].forEach(n=>cmp.addEventListener(n,()=>drag=false));
 cmp.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){setPos(pos-5);e.preventDefault()}if(e.key==='ArrowRight'){setPos(pos+5);e.preventDefault()}});
 /* parede de casos + filtros */
-const grupos=['Todos',...new Set(CASOS.map(c=>c.g))];
-$('#chips').innerHTML=grupos.map((g,k)=>`<button class="chip${k?'':' on'}" data-g="${g}">${g}</button>`).join('');
-$('#wall').innerHTML=CASOS.map((c,i)=>`<button class="tile" data-i="${i}" data-g="${c.g}" aria-label="${c.t}"><img src="t${c.id}a.webp" alt="" loading="lazy"><img src="t${c.id}d.webp" alt="" loading="lazy"><span>${c.t}</span></button>`).join('');
-$$('.tile').forEach(t=>t.onclick=()=>{load(+t.dataset.i);cmp.scrollIntoView({behavior:'smooth',block:'center'})});
-$$('.chip').forEach(b=>b.onclick=()=>{$$('.chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');$$('.tile').forEach(t=>t.hidden=b.dataset.g!=='Todos'&&t.dataset.g!==b.dataset.g);
-  const first=$$('.tile').find(t=>!t.hidden);if(first)load(+first.dataset.i)});
+$('#cases').innerHTML=CASOS.map((c,i)=>`<button class="case" data-i="${i}" aria-label="${c.t}"><img src="t${c.id}d.webp" alt="${c.t}" loading="lazy"></button>`).join('');
+$$('.case').forEach(b=>b.onclick=()=>{load(+b.dataset.i)});
 load(0,false);
 new IntersectionObserver((es,o)=>{if(es[0].isIntersecting){sweep();o.disconnect()}},{threshold:.5}).observe(cmp);
 
